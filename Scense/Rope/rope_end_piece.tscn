@@ -1,0 +1,20 @@
+[gd_scene load_steps=2 format=3 uid="uid://bitnelk48wjkm"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_ngxqe"]
+radius = 2.0
+
+[node name="RopeEndPiece" type="StaticBody2D"]
+collision_layer = 2
+collision_mask = 0
+
+[node name="C" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_ngxqe")
+
+[node name="J" type="PinJoint2D" parent="C"]
+bias = 0.1
+softness = 0.1
+
+[node name="Polygon2D" type="Polygon2D" parent="."]
+scale = Vector2(0.5, 0.5)
+color = Color(0.345614, 0.717943, 0.473193, 1)
+polygon = PackedVector2Array(0, -10, 10, 0, 0, 10, -10, 0)
