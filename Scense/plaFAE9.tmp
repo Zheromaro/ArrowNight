@@ -1,0 +1,45 @@
+[gd_scene load_steps=5 format=3 uid="uid://cfd3wwjsrd5bq"]
+
+[ext_resource type="Script" path="res://Scripts/player.gd" id="1_0ktrv"]
+[ext_resource type="Texture2D" uid="uid://dyxpplsdsunar" path="res://Assets/icon.svg" id="2_ica1k"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_vuahf"]
+size = Vector2(12, 12)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_dwbot"]
+radius = 7.0
+
+[node name="Player" type="CharacterBody2D" node_paths=PackedStringArray("rope_detector")]
+script = ExtResource("1_0ktrv")
+max_speed = 150
+acceleration = 10
+deceleration = 0.3
+jump_fall_time = 1.0
+jump_height = 150.0
+jump_distance = 200.0
+rope_hanging_move_speed = 0.2
+rope_detector = NodePath("RopeDetector")
+
+[node name="Icon" type="Sprite2D" parent="."]
+scale = Vector2(0.1, 0.1)
+texture = ExtResource("2_ica1k")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_vuahf")
+
+[node name="CoyoteTimer" type="Timer" parent="."]
+one_shot = true
+
+[node name="JumpBufferTimer" type="Timer" parent="."]
+one_shot = true
+
+[node name="RopeDetector" type="Area2D" parent="."]
+position = Vector2(0, -6)
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="RopeDetector"]
+shape = SubResource("CircleShape2D_dwbot")
+debug_color = Color(0.914947, 8.29774e-05, 0.714501, 0.42)
+
+[connection signal="body_entered" from="RopeDetector" to="." method="_on_rope_detector_body_entered"]

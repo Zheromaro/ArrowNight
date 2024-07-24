@@ -26,7 +26,7 @@ var active_rope_id := -INF :
 @onready var rope_end_joint: PinJoint2D = $RopeEndPiece/C/J
 
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	update_rope_point()
 	
 	if !rope_points.is_empty():
@@ -85,4 +85,4 @@ func update_rope_point() -> void:
 	rope_points.append(rope_end_joint.global_position)
 
 func _draw() -> void:
-	draw_polyline(rope_points, Color.BLACK)
+	draw_polyline(rope_points, Color.WHITE, 1)

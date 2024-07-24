@@ -1,30 +1,33 @@
 [gd_scene load_steps=5 format=3 uid="uid://cfd3wwjsrd5bq"]
 
 [ext_resource type="Script" path="res://Scripts/player.gd" id="1_0ktrv"]
-[ext_resource type="Texture2D" uid="uid://dyxpplsdsunar" path="res://Assets/icon.svg" id="2_ica1k"]
+[ext_resource type="PackedScene" uid="uid://g8j8rvlqm8kd" path="res://Assets/Player_AN.aseprite" id="2_5xvq3"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_vuahf"]
-size = Vector2(12, 12)
+size = Vector2(10, 14)
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_dwbot"]
-radius = 7.0
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_mtmc2"]
+size = Vector2(6, 2)
 
-[node name="Player" type="CharacterBody2D" node_paths=PackedStringArray("rope_detector")]
+[node name="Player" type="CharacterBody2D" node_paths=PackedStringArray("rope_detector_head", "rope_detector_legs", "cast_ground_on_rope")]
+z_index = 10
 script = ExtResource("1_0ktrv")
-max_speed = 150
 acceleration = 10
 deceleration = 0.3
-jump_fall_time = 1.0
-jump_height = 150.0
-jump_distance = 200.0
+jump_peak_time = 0.4
+jump_fall_time = 0.3
+jump_height = 3.0
+jump_distance = 10.0
 rope_hanging_move_speed = 0.2
-rope_detector = NodePath("RopeDetector")
+rope_detector_head = NodePath("")
+rope_detector_legs = NodePath("RopeDetectorLegs")
+cast_ground_on_rope = NodePath("CastGroundOnRope")
 
-[node name="Icon" type="Sprite2D" parent="."]
-scale = Vector2(0.1, 0.1)
-texture = ExtResource("2_ica1k")
+[node name="Player_AN" parent="." instance=ExtResource("2_5xvq3")]
+animation = &"Idel"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -1)
 shape = SubResource("RectangleShape2D_vuahf")
 
 [node name="CoyoteTimer" type="Timer" parent="."]
@@ -33,13 +36,17 @@ one_shot = true
 [node name="JumpBufferTimer" type="Timer" parent="."]
 one_shot = true
 
-[node name="RopeDetector" type="Area2D" parent="."]
-position = Vector2(0, -6)
+[node name="RopeDetectorLegs" type="Area2D" parent="."]
+position = Vector2(0, 6)
 collision_layer = 0
 collision_mask = 2
 
-[node name="CollisionShape2D2" type="CollisionShape2D" parent="RopeDetector"]
-shape = SubResource("CircleShape2D_dwbot")
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="RopeDetectorLegs"]
+shape = SubResource("RectangleShape2D_mtmc2")
 debug_color = Color(0.914947, 8.29774e-05, 0.714501, 0.42)
 
-[connection signal="body_entered" from="RopeDetector" to="." method="_on_rope_detector_body_entered"]
+[node name="CastGroundOnRope" type="RayCast2D" parent="."]
+position = Vector2(0, 6)
+target_position = Vector2(0, 2)
+
+[connection signal="body_entered" from="RopeDetectorLegs" to="." method="_on_rope_detector_body_entered"]
