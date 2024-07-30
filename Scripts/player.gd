@@ -6,26 +6,21 @@ var state = states.GROUNDED
 var playing_jump_fall := false
 
 @export_group("Run")
-@export var max_speed := 100
+@export var ground_speed := 100
 @export var acceleration := 50
 @export_range(0, 1) var deceleration := 0.2
 
 @export_group("Jump")
 @export var jump_peak_time := 0.5
 @export var jump_fall_time := 0.5
-@export var jump_height := 2.0 :
-	set(value):
-		jump_height = value * 8
-		print("jump_height :" + str(jump_height))
-@export var jump_distance := 4.0:
-	set(value):
-		jump_distance = value * 8
-		print("jump_distance :" + str(jump_distance))
+@export var jump_height := 2.0 
+@export var jump_distance := 4.0
+var tilesize := 8
 
-@onready var jump_velocity : float = -((2.0 * jump_height) / jump_peak_time)                    # physics
-@onready var jump_gravity: float = -((-2.0 * jump_height) / pow(jump_peak_time, 2))             # physics
-@onready var fall_gravity: float = -((-2.0 * jump_height) / pow(jump_fall_time, 2))             # physics
-@onready var air_speed : float  = float(jump_distance) / float(jump_peak_time + jump_fall_time)            # physics
+@onready var jump_velocity : float = -((2.0 * jump_height * tilesize) / jump_peak_time)                    # physics
+@onready var jump_gravity: float = -((-2.0 * jump_height * tilesize) / pow(jump_peak_time, 2))             # physics
+@onready var fall_gravity: float = -((-2.0 * jump_height * tilesize) / pow(jump_fall_time, 2))             # physics
+@onready var air_speed : float  = float(jump_distance * tilesize) / float(jump_peak_time + jump_fall_time) # physics
 
 @export var coyote_time := 0.2
 @export var jump_buffer_time := 0.15
@@ -36,19 +31,13 @@ var jump_available := false
 var can_jump_buffer := false
 
 @export_group("Grap Rope")
-@export var rope_hanging_move_speed: float = 0.1
-@export var rope_detector_head: Area2D 
-@export var rope_detector_legs: Area2D 
-@export var cast_ground_on_rope: RayCast2D 
-
-var attached_rope_part_id : int = -INF
-var attached_rope : Object = null
-var rope_section_progress := 0.0
-var attached_rop_face_left := false
-var last_pos := Vector2.ZERO
+@export var climp_speed: float = 1.0
+@export var rope_swing_speed: float = 50.0
+@export var _rope_interaction: RopeInteraction
+@onready var cast_ground_on_rope: RayCast2D = $CastGroundOnRope
 
 func _physics_process(delta: float) -> void:
-	last_pos = position
+	var on_rope := _rope_interaction.enable
 	
 	match state:
 		states.GROUNDED: # -------------------------------------------------
@@ -101,39 +90,45 @@ func _physics_process(delta: float) -> void:
 					state = states.GROUNDED
 			
 		states.HANGE:    # -------------------------------------------------
-			Grap_rope()
-			
-			if cast_ground_on_rope.is_colliding():
-				Leave_rope()
-				state = states.GROUNDED
-				return
-			
-			if Input.is_action_just_pressed("Down"):
-				Leave_rope()
-				state = states.FALL
-				return
+			Grap_rope(delta)
 			
 			if Input.is_action_just_pressed("Jump"):
 				Leave_rope()
 				state = states.JUMP
 				return
+			
+			if _rope_interaction.rope_position == 1 && Input.is_action_pressed("Down"):
+				Leave_rope()
+				state = states.FALL
+				return
+			
+			if cast_ground_on_rope.is_colliding():
+				Leave_rope()
+				state = states.FALL
+				return
 	
-	if state != states.HANGE:
-		Move()
+	Move()
 	
 	move_and_slide()
-	
+
 
 func Move() -> void:
-	var speed = max_speed if is_on_floor() else air_speed
-	var direction := Input.get_axis("Left", "Right")
-	if direction:
-		velocity.x += direction * acceleration
+	var max_speed : float 
+	if is_on_floor():
+		max_speed = ground_speed
+	elif state == states.HANGE:
+		max_speed = rope_swing_speed
+	else:
+		max_speed = air_speed
+	
+	var h_direction := Input.get_axis("Left", "Right")
+	if h_direction:
+		velocity.x += h_direction * acceleration
 		
 		if !playing_jump_fall:
 			player_an.play("Run")
 		
-		if direction > 0:
+		if h_direction > 0:
 			player_an.flip_h = false
 		else:
 			player_an.flip_h = true
@@ -143,7 +138,7 @@ func Move() -> void:
 		if !playing_jump_fall:
 			player_an.play("Idel")
 	
-	velocity.x = clamp(velocity.x, -speed, speed)
+	velocity.x = clamp(velocity.x, -max_speed, max_speed)
 
 func Jump() -> void:
 	velocity.y = jump_velocity
@@ -157,53 +152,24 @@ func Fall(delta: float) -> void:
 	if get_gravity == fall_gravity:
 		player_an.play("Fall")
 
-# rope
 
-func _on_rope_detector_body_entered(body: Node2D) -> void:
-	if state != states.HANGE && state != states.GROUNDED && body.is_in_group("rope"):
-		state = states.HANGE
-		rope_section_progress = 0.0
-		attached_rope_part_id = body.id
-		attached_rope = body.parent
-		attached_rop_face_left = attached_rope.rope_face_left
-		
-		# effect the rope when player is atached to it
-		(body as RigidBody2D).apply_central_impulse((last_pos - position) * 20)
+func _on_rope_detector_legs_area_entered(area: Area2D) -> void:
+	if not area.is_in_group("rope"):
+		return
+	
+	state = states.HANGE
+	var shape_generator :=  area.get_node("RopeCollisionShapeGenerator") as RopeCollisionShapeGenerator
+	var rope := shape_generator.get_node(shape_generator.rope_path) as Rope
+	_rope_interaction.rope = rope
+	_rope_interaction.enable = true
+	_rope_interaction.use_nearest_position()
+	_rope_interaction.force_snap_to_rope()
 
-func Grap_rope():
-	velocity = Vector2.ZERO
-	
-	var left = "Left" if attached_rop_face_left else "Right"
-	var right = "Left" if !attached_rop_face_left else "Right"
-	
-	if Input.is_action_pressed(left):
-		rope_section_progress -= rope_hanging_move_speed
-		if rope_section_progress < 0:
-			if attached_rope_part_id > 0:
-				rope_section_progress = 1.0
-				attached_rope_part_id = clamp( attached_rope_part_id -1, 0, attached_rope.rope_parts.size() -1)
-			else:
-				rope_section_progress = 0.0
-		
-	elif Input.is_action_pressed(right):
-		rope_section_progress += rope_hanging_move_speed
-		if rope_section_progress > 1:
-			if attached_rope_part_id < attached_rope.rope_parts.size()-2:
-				rope_section_progress = 0.0
-				attached_rope_part_id = clamp( attached_rope_part_id +1, 0, attached_rope.rope_parts.size() -1)
-			else:
-				rope_section_progress = 1.0
-	
-	# Get player position on rope
-	attached_rope.active_rope_id = attached_rope_part_id
-	var current_piece_pos = attached_rope.rope_parts[attached_rope_part_id].global_position 
-	var next_piece_id = clamp( attached_rope_part_id +1, 0, attached_rope.rope_parts.size() -1)
-	var next_piece_pos = attached_rope.rope_parts[next_piece_id].global_position 
-	var new_pos = lerp(current_piece_pos, next_piece_pos, rope_section_progress)
-	
-	global_position = new_pos
+func Grap_rope(delta: float):
+	var vdir := Input.get_axis("Up", "Down")
+	_rope_interaction.rope_position = clamp(_rope_interaction.rope_position + vdir * climp_speed * delta, 0.0, 1.0)
+	_rope_interaction.force_snap_to_rope()
 
 func Leave_rope():
-	attached_rope_part_id = -INF
-	attached_rope.active_rope_id = -INF
-	attached_rope = null
+	velocity += _rope_interaction.get_anchor().get_velocity()
+	_rope_interaction.enable = false
