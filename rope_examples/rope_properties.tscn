@@ -139,7 +139,7 @@ strength = 1.0
 rope_path = NodePath("..")
 
 [node name="Node2D2" type="Node2D" parent="."]
-position = Vector2(189.899, 118.707)
+position = Vector2(185.266, 121.613)
 
 [node name="Rope3" type="Node2D" parent="Node2D2"]
 position = Vector2(-88.3748, -22.2188)

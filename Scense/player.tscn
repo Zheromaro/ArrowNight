@@ -1,18 +1,26 @@
-[gd_scene load_steps=7 format=3 uid="uid://cfd3wwjsrd5bq"]
+[gd_scene load_steps=10 format=3 uid="uid://cfd3wwjsrd5bq"]
 
 [ext_resource type="Script" path="res://Scripts/player.gd" id="1_0ktrv"]
 [ext_resource type="PackedScene" uid="uid://g8j8rvlqm8kd" path="res://Assets/Player_AN.aseprite" id="2_5xvq3"]
 [ext_resource type="Script" path="res://Scripts/rope_detector.gd" id="3_7bx3k"]
 [ext_resource type="Script" path="res://addons/ropesim/RopeInteraction.gd" id="3_d8y6r"]
+[ext_resource type="Script" path="res://Scripts/cast_collision_on_rope.gd" id="3_lt10a"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_vuahf"]
 size = Vector2(10, 14)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_mtmc2"]
-size = Vector2(6, 2)
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_op0m7"]
+size = Vector2(14, 14)
 
-[node name="Player" type="CharacterBody2D" node_paths=PackedStringArray("_rope_interaction") groups=["Player"]]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ohqtp"]
+size = Vector2(10, 40)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_mtmc2"]
+size = Vector2(6, 6)
+
+[node name="Player" type="CharacterBody2D" node_paths=PackedStringArray("_rope_interaction", "not_effected_by_rope_movement", "cast_on_rope") groups=["Player"]]
 z_index = 10
+position = Vector2(0, 14)
 script = ExtResource("1_0ktrv")
 acceleration = 10
 deceleration = 0.3
@@ -20,14 +28,18 @@ jump_peak_time = 0.4
 jump_fall_time = 0.3
 jump_height = 3.0
 jump_distance = 10.0
+climp_speed = 0.5
 _rope_interaction = NodePath("RopeInteraction")
-
-[node name="Player_AN" parent="." instance=ExtResource("2_5xvq3")]
-animation = &"Idel"
+not_effected_by_rope_movement = [NodePath("RopeUpDownPos")]
+cast_on_rope = NodePath("CastOnRope")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(0, -1)
+position = Vector2(0, -7)
 shape = SubResource("RectangleShape2D_vuahf")
+
+[node name="Player_AN" parent="." instance=ExtResource("2_5xvq3")]
+position = Vector2(0, -6)
+animation = &"Idel"
 
 [node name="CoyoteTimer" type="Timer" parent="."]
 one_shot = true
@@ -35,27 +47,32 @@ one_shot = true
 [node name="JumpBufferTimer" type="Timer" parent="."]
 one_shot = true
 
-[node name="RopeDetectorLegs" type="Area2D" parent="." node_paths=PackedStringArray("player")]
-position = Vector2(0, 6)
+[node name="CastOnRope" type="Node2D" parent="." node_paths=PackedStringArray("collision_exceptions")]
+position = Vector2(0, -7)
+script = ExtResource("3_lt10a")
+collision_exceptions = [NodePath("..")]
+
+[node name="Cast_left_right" type="ShapeCast2D" parent="CastOnRope"]
+modulate = Color(1, 1, 1, 0.270588)
+enabled = false
+shape = SubResource("RectangleShape2D_op0m7")
+target_position = Vector2(0, 0)
+
+[node name="Cast_up_down" type="ShapeCast2D" parent="CastOnRope"]
+modulate = Color(1, 1, 1, 0.270588)
+enabled = false
+shape = SubResource("RectangleShape2D_ohqtp")
+target_position = Vector2(0, 0)
+
+[node name="RopeDetector" type="Area2D" parent="." node_paths=PackedStringArray("player")]
+position = Vector2(0, -5)
+collision_layer = 0
 script = ExtResource("3_7bx3k")
 player = NodePath("..")
 
-[node name="CollisionShape2D2" type="CollisionShape2D" parent="RopeDetectorLegs"]
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="RopeDetector"]
 shape = SubResource("RectangleShape2D_mtmc2")
 debug_color = Color(0.914947, 8.29774e-05, 0.714501, 0.42)
-
-[node name="RopeDetectorArm" type="Area2D" parent="." node_paths=PackedStringArray("player")]
-position = Vector2(0, -2)
-script = ExtResource("3_7bx3k")
-player = NodePath("..")
-
-[node name="CollisionShape2D2" type="CollisionShape2D" parent="RopeDetectorArm"]
-shape = SubResource("RectangleShape2D_mtmc2")
-debug_color = Color(0.914947, 8.29774e-05, 0.714501, 0.42)
-
-[node name="CastGroundOnRope" type="RayCast2D" parent="."]
-position = Vector2(0, 6)
-target_position = Vector2(0, 3)
 
 [node name="RopeInteraction" type="Node" parent="." node_paths=PackedStringArray("target_node")]
 script = ExtResource("3_d8y6r")
@@ -63,5 +80,15 @@ enable = false
 position_update_mode = 1
 target_node = NodePath("..")
 
-[connection signal="area_entered" from="RopeDetectorLegs" to="." method="_on_rope_detector_legs_area_entered"]
-[connection signal="area_entered" from="RopeDetectorArm" to="." method="_on_rope_detector_legs_area_entered"]
+[node name="RopeUpDownPos" type="Node2D" parent="."]
+top_level = true
+
+[node name="Up" type="Marker2D" parent="RopeUpDownPos"]
+
+[node name="Down" type="Marker2D" parent="RopeUpDownPos"]
+position = Vector2(0, 14)
+
+[connection signal="on_grap_rope" from="." to="CastOnRope" method="_on_player_on_grap_rope"]
+[connection signal="on_leave_rope" from="." to="CastOnRope" method="_on_player_on_leave_rope"]
+[connection signal="area_entered" from="RopeDetector" to="RopeDetector" method="_on_area_entered"]
+[connection signal="on_rope_detected" from="RopeDetector" to="." method="_on_rope_detected"]
