@@ -1,0 +1,94 @@
+[gd_scene load_steps=9 format=3 uid="uid://dbixtahok3gc2"]
+
+[ext_resource type="Script" path="res://Scripts/Rope/grap_rope.gd" id="1_b7jke"]
+[ext_resource type="Script" path="res://addons/ropesim/Rope.gd" id="1_d2m7u"]
+[ext_resource type="Script" path="res://Scripts/player_detector.gd" id="2_6n3et"]
+[ext_resource type="Script" path="res://addons/ropesim/RopeCollisionShapeGenerator.gd" id="3_pjh4l"]
+[ext_resource type="Script" path="res://addons/ropesim/RopeInteraction.gd" id="5_rb8jt"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_nqv66"]
+size = Vector2(14, 18)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_6m1ka"]
+size = Vector2(5, 18)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_qd76b"]
+size = Vector2(14, 17)
+
+[node name="GrapRope" type="Node2D"]
+script = ExtResource("1_d2m7u")
+
+[node name="GrapRopeManager" type="Node" parent="."]
+script = ExtResource("1_b7jke")
+
+[node name="Area2D" type="Area2D" parent="." groups=["WalkingRope"]]
+script = ExtResource("2_6n3et")
+
+[node name="RopeCollisionShapeGenerator" type="Node" parent="Area2D"]
+script = ExtResource("3_pjh4l")
+rope_path = NodePath("../..")
+
+[node name="RopeInteraction" type="Node" parent="." node_paths=PackedStringArray("target_node", "rope")]
+script = ExtResource("5_rb8jt")
+enable = false
+position_update_mode = 0
+target_node = NodePath("../RopeTargetPos")
+rope = NodePath("..")
+
+[node name="RopeTargetPos" type="Marker2D" parent="."]
+position = Vector2(-13, 12)
+
+[node name="RopeUpPos" type="Marker2D" parent="RopeTargetPos"]
+position = Vector2(0, -2)
+
+[node name="UpRemote" type="RemoteTransform2D" parent="RopeTargetPos/RopeUpPos"]
+
+[node name="UpCast" type="ShapeCast2D" parent="RopeTargetPos/RopeUpPos"]
+self_modulate = Color(0.681272, 0.629837, 0.302886, 0.780392)
+position = Vector2(0, -9)
+shape = SubResource("RectangleShape2D_nqv66")
+target_position = Vector2(0, 0)
+
+[node name="UpRightCast" type="ShapeCast2D" parent="RopeTargetPos/RopeUpPos"]
+self_modulate = Color(0.681272, 0.629837, 0.302886, 0.780392)
+position = Vector2(4, -9)
+shape = SubResource("RectangleShape2D_6m1ka")
+target_position = Vector2(0, 0)
+
+[node name="UpLeftCast" type="ShapeCast2D" parent="RopeTargetPos/RopeUpPos"]
+self_modulate = Color(0.681272, 0.629837, 0.302886, 0.780392)
+position = Vector2(-4, -9)
+shape = SubResource("RectangleShape2D_6m1ka")
+target_position = Vector2(0, 0)
+
+[node name="RopeDownPos" type="Marker2D" parent="RopeTargetPos"]
+position = Vector2(0, 16)
+
+[node name="DownRemote" type="RemoteTransform2D" parent="RopeTargetPos/RopeDownPos"]
+
+[node name="DownCast" type="ShapeCast2D" parent="RopeTargetPos/RopeDownPos"]
+self_modulate = Color(0.681272, 0.629837, 0.302886, 0.780392)
+position = Vector2(0, -5)
+shape = SubResource("RectangleShape2D_qd76b")
+target_position = Vector2(0, 0)
+
+[node name="DownRightCast" type="ShapeCast2D" parent="RopeTargetPos/RopeDownPos"]
+self_modulate = Color(0.681272, 0.629837, 0.302886, 0.780392)
+position = Vector2(4, -5)
+shape = SubResource("RectangleShape2D_6m1ka")
+target_position = Vector2(0, 0)
+
+[node name="DownLeftCast" type="ShapeCast2D" parent="RopeTargetPos/RopeDownPos"]
+self_modulate = Color(0.681272, 0.629837, 0.302886, 0.780392)
+position = Vector2(-4, -5)
+shape = SubResource("RectangleShape2D_6m1ka")
+target_position = Vector2(0, 0)
+
+[node name="DebugRopePos" type="Polygon2D" parent="RopeTargetPos"]
+visible = false
+scale = Vector2(0.6, 0.6)
+color = Color(0.431373, 0.290196, 0.352941, 0.890196)
+polygon = PackedVector2Array(0, -7, 7, 0, 0, 7, -7, 0)
+
+[connection signal="body_entered" from="Area2D" to="Area2D" method="_on_body_entered"]
+[connection signal="on_player_entered" from="Area2D" to="GrapRopeManager" method="on_player_entered"]

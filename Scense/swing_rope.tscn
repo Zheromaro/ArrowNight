@@ -1,0 +1,37 @@
+[gd_scene load_steps=6 format=3 uid="uid://c38gl7vric7ml"]
+
+[ext_resource type="Script" path="res://addons/ropesim/Rope.gd" id="1_a7bps"]
+[ext_resource type="Script" path="res://Scripts/Rope/swing_rope.gd" id="2_ktv53"]
+[ext_resource type="Script" path="res://Scripts/player_detector.gd" id="3_gegtg"]
+[ext_resource type="Script" path="res://addons/ropesim/RopeCollisionShapeGenerator.gd" id="4_g0hhe"]
+[ext_resource type="Script" path="res://addons/ropesim/RopeInteraction.gd" id="6_tq6uh"]
+
+[node name="SwingRope" type="Node2D"]
+script = ExtResource("1_a7bps")
+
+[node name="SwingRopeManager" type="Node" parent="." node_paths=PackedStringArray("rope_interaction", "remote_transform_2d")]
+script = ExtResource("2_ktv53")
+rope_swing_speed = 0.5
+rope_interaction = NodePath("../RopeInteraction")
+remote_transform_2d = NodePath("../RopeTargetPos/RemoteTransform2D")
+
+[node name="Area2D" type="Area2D" parent="."]
+script = ExtResource("3_gegtg")
+
+[node name="RopeCollisionShapeGenerator" type="Node" parent="Area2D"]
+script = ExtResource("4_g0hhe")
+rope_path = NodePath("../..")
+
+[node name="RopeInteraction" type="Node" parent="." node_paths=PackedStringArray("target_node", "rope")]
+script = ExtResource("6_tq6uh")
+enable = false
+position_update_mode = 0
+target_node = NodePath("../RopeTargetPos")
+rope = NodePath("..")
+
+[node name="RopeTargetPos" type="Marker2D" parent="."]
+
+[node name="RemoteTransform2D" type="RemoteTransform2D" parent="RopeTargetPos"]
+
+[connection signal="body_entered" from="Area2D" to="Area2D" method="_on_body_entered"]
+[connection signal="on_player_entered" from="Area2D" to="SwingRopeManager" method="on_player_entered"]

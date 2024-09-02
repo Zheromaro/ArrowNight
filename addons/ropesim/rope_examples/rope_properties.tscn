@@ -1,6 +1,6 @@
 [gd_scene load_steps=10 format=3 uid="uid://clyutgr2fativ"]
 
-[ext_resource type="Script" path="res://rope_examples/scripts/animation_player.gd" id="1_mv383"]
+[ext_resource type="Script" path="res://addons/ropesim/rope_examples/scripts/animation_player.gd" id="1_mv383"]
 [ext_resource type="Script" path="res://addons/ropesim/RopeHandle.gd" id="3_mb3ny"]
 [ext_resource type="Script" path="res://addons/ropesim/Rope.gd" id="4_rnvio"]
 

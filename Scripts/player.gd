@@ -30,20 +30,10 @@ var tilesize := 8
 var jump_available := false
 var can_jump_buffer := false
 
-@export_group("Grap Rope")
-@export var climp_speed: float = 1.0
-@export var rope_swing_speed: float = 50.0
-@export var _rope_interaction: RopeInteraction
-@export var not_effected_by_rope_movement: Array[Node2D]
-@export var cast_on_rope: Node2D 
-
-signal on_grap_rope
-signal on_swing_rope
+@export_group("Rope")
 signal on_leave_rope
 
 func _physics_process(delta: float) -> void:
-	var on_rope := _rope_interaction.enable
-	get_children()
 	match state:
 		states.GROUNDED: # -------------------------------------------------
 			jump_available = true
@@ -54,7 +44,7 @@ func _physics_process(delta: float) -> void:
 				state = states.FALL
 			
 			if Input.is_action_just_pressed("Jump") && jump_available:
-					state = states.JUMP
+				state = states.JUMP
 			
 		states.JUMP:     # -------------------------------------------------
 			Jump()
@@ -95,38 +85,35 @@ func _physics_process(delta: float) -> void:
 					state = states.GROUNDED
 			
 		states.SWING:    # -------------------------------------------------
-			Swing_rope(delta)
-			
 			if Input.is_action_just_pressed("Jump"):
-				Leave_rope()
 				state = states.JUMP
-				return
 			
-			if _rope_interaction.rope_position == 0.95 && Input.is_action_pressed("Down"):
-				Leave_rope()
-				state = states.FALL
-				return
+			if state != states.SWING:
+				on_leave_rope.emit()
 			
 		states.GRAP:    # -------------------------------------------------
-			Grap_rope(delta)
 			
 			if Input.is_action_just_pressed("Jump"):
-				Leave_rope()
 				state = states.JUMP
-				return
+			
+			if state != states.GRAP:
+				on_leave_rope.emit()
 			
 	
-	Move()
+	
+	if state != states.SWING:
+		Move()
 	
 	move_and_slide()
 
 
 func Move() -> void:
+	if state == states.GRAP:
+		return
+	
 	var max_speed : float 
 	if is_on_floor():
 		max_speed = ground_speed
-	elif state == states.GRAP:
-		max_speed = rope_swing_speed
 	else:
 		max_speed = air_speed
 	
@@ -160,48 +147,3 @@ func Fall(delta: float) -> void:
 	
 	if get_gravity == fall_gravity:
 		player_an.play("Fall")
-
-# ------- rope ------------
-
-
-func _on_rope_detected(area) -> void:
-	
-	var shape_generator :=  area.get_node("RopeCollisionShapeGenerator") as RopeCollisionShapeGenerator
-	_rope_interaction.rope = shape_generator.get_node(shape_generator.rope_path) as Rope
-	_rope_interaction.enable = true
-	_rope_interaction.use_nearest_position()
-	_rope_interaction.force_snap_to_rope()
-	
-	
-	velocity = Vector2.ZERO
-	if area.is_in_group("SwingingRope"):
-		state = states.SWING
-	elif area.is_in_group("WalkingRope"):
-		state = states.GRAP
-
-
-func Grap_rope(delta: float):
-	if (cast_on_rope.is_colliding_right() && Input.is_action_pressed("Right") 
-	|| cast_on_rope.is_colliding_left() && Input.is_action_pressed("Left")):
-		return
-	
-	var hdir := Input.get_axis("Right", "Left")
-	
-	_rope_interaction.rope_position = clamp(_rope_interaction.rope_position + hdir * climp_speed * delta, 0.05, 0.95)
-	_rope_interaction.force_snap_to_rope()
-	
-	on_grap_rope.emit()
-
-func Swing_rope(delta: float):
-	var vdir := Input.get_axis("Up", "Down")
-	_rope_interaction.rope_position = clamp(_rope_interaction.rope_position + vdir * climp_speed * delta, 0.0, 0.95)
-	_rope_interaction.force_snap_to_rope()
-	
-	
-	on_swing_rope.emit()
-
-func Leave_rope():
-	velocity += _rope_interaction.get_anchor().get_velocity()
-	_rope_interaction.enable = false
-	
-	on_leave_rope.emit()
