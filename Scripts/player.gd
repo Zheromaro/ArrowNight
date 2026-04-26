@@ -2,7 +2,7 @@ extends CharacterBody2D
 
 enum states { GROUNDED, JUMP, FALL, GRAP, SWING}
 var state = states.GROUNDED
-@onready var player_an: AnimatedSprite2D = $Player_AN
+@onready var player_an: AnimatedSprite2D = $CatPlayer
 var playing_jump_fall := false
 
 @export_group("Run")
@@ -92,6 +92,7 @@ func _physics_process(delta: float) -> void:
 				on_leave_rope.emit()
 			
 		states.GRAP:    # -------------------------------------------------
+			player_an.play("Run")
 			
 			if Input.is_action_just_pressed("Jump"):
 				state = states.JUMP
@@ -100,8 +101,8 @@ func _physics_process(delta: float) -> void:
 				on_leave_rope.emit()
 			
 	
-	
-	if state != states.SWING:
+	var on_rope : bool = state == states.SWING || state == states.GRAP
+	if not on_rope:
 		Move()
 	
 	move_and_slide()

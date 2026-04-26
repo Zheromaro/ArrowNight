@@ -8,6 +8,7 @@
 
 [node name="SwingRope" type="Node2D"]
 script = ExtResource("1_a7bps")
+line_width = 1.0
 
 [node name="SwingRopeManager" type="Node" parent="." node_paths=PackedStringArray("rope_interaction", "remote_transform_2d")]
 script = ExtResource("2_ktv53")

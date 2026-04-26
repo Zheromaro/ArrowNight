@@ -35,12 +35,9 @@ func Swing_rope(delta: float):
 	# up-down movement
 	rope_interaction.rope_position = clamp(
 		rope_interaction.rope_position + dir.x * rope_climp_speed * delta,
-		0, 1
+		0, 0.97 # rope up-down  limit
 		)
 	rope_interaction.force_snap_to_rope()
 	
 	# left-right movement
 	rope_interaction.target_node.position.x += dir.y * rope_swing_speed
-	
-	
-

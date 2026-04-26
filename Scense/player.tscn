@@ -1,11 +1,23 @@
 [gd_scene load_steps=5 format=3 uid="uid://cfd3wwjsrd5bq"]
 
 [ext_resource type="Script" path="res://Scripts/player.gd" id="1_0ktrv"]
-[ext_resource type="PackedScene" uid="uid://g8j8rvlqm8kd" path="res://Assets/Player_AN.aseprite" id="2_5xvq3"]
-[ext_resource type="Script" path="res://Scripts/player_action.gd" id="3_ing8d"]
+[ext_resource type="PackedScene" uid="uid://cqnmf6nwk5lxo" path="res://Assets/CatPlayer.aseprite" id="2_bcw0b"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_vuahf"]
 size = Vector2(10, 14)
+
+[sub_resource type="GDScript" id="GDScript_d687n"]
+script/source = "extends Node2D
+
+
+func Do_action() -> void:
+	pass # Replace with function body.
+
+
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+func Stop_action(delta: float) -> void:
+	pass
+"
 
 [node name="Player" type="CharacterBody2D" groups=["Player"]]
 z_index = 10
@@ -21,9 +33,11 @@ jump_distance = 10.0
 position = Vector2(0, -7)
 shape = SubResource("RectangleShape2D_vuahf")
 
-[node name="Player_AN" parent="." instance=ExtResource("2_5xvq3")]
-position = Vector2(0, -6)
-animation = &"Idel"
+[node name="CatPlayer" parent="." instance=ExtResource("2_bcw0b")]
+position = Vector2(0, -16)
+animation = &"GrapRope"
+frame = 7
+frame_progress = 0.948137
 
 [node name="CoyoteTimer" type="Timer" parent="."]
 one_shot = true
@@ -32,4 +46,4 @@ one_shot = true
 one_shot = true
 
 [node name="PlayerAction" type="Node2D" parent="."]
-script = ExtResource("3_ing8d")
+script = SubResource("GDScript_d687n")

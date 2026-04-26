@@ -17,6 +17,7 @@ size = Vector2(14, 17)
 
 [node name="GrapRope" type="Node2D"]
 script = ExtResource("1_d2m7u")
+line_width = 1.0
 
 [node name="GrapRopeManager" type="Node" parent="."]
 script = ExtResource("1_b7jke")
